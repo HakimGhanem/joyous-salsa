@@ -30,7 +30,7 @@ export default class App extends React.Component {
   render() {
     return (
        
-       <View><Text>XXX</Text></View>
+       <View><Text>d</Text></View>
        <Search/>
 
        
