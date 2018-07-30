@@ -2,13 +2,14 @@
 
 import React from 'react';
 import {
+  ActivityIndicator,
   StyleSheet,
   View,
   TextInput,
   Button,
   Text,
   FlatList,
-  Image
+  Image,
 } from 'react-native';
 //import films from '../Helpers/filmsData'
 import FilmItem from './FilmItem';
@@ -18,49 +19,113 @@ import { getImageFromApi } from '../API/TMDBApi';
 class Search extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { films: [] };
+    this.state = {
+      films: [],
+      isLoading: false,
+    };
     this.searchedText = '';
+    this.page = 0;
+    this.totalPages = 0;
   }
 
   _loadFilms() {
     if (this.searchedText.length > 0) {
-      getFilmsFromApiWithSearchedText(this.searchedText).then(data => {
-        /* BAD WAY TO DO : 
+      this.setState({ isLoading: true });
+      getFilmsFromApiWithSearchedText(this.searchedText, this.page + 1).then(
+        data => {
+          /* BAD WAY TO DO : 
       this._films = data.results
       this.forceUpdate()
       */
-        this.setState({ films: data.results });
-      });
+          this.page = data.page;
+          this.totalPages = data.total_pages;
+          this.setState({
+            films: this.state.films.concat(data.results),
+            isLoading: false,
+          });
+        }
+      );
     }
-
   }
 
   _searchTextInputChanged(text) {
-    this.searchedText = text
+    this.searchedText = text;
   }
+
+  _displayLoading() {
+    if (this.setState.isLoading) {
+      <View style={styles.loading_container}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>;
+    }
+  }
+
+  _searchFilms() {
+    this.page = 0;
+    this.totalPages = 0;
+    this.setState(
+      {
+        films: [],
+      },
+      () => {
+        console.log(
+          'Page : ' +
+            this.page +
+            ' / TotalPages : ' +
+            this.totalPages +
+            ' / Nombre de films : ' +
+            this.state.films.length
+        );
+        this._loadFilms();
+      }
+    );
+  }
+
   render() {
+    console.log(this.state.films);
     return (
       <View style={styles.main_container}>
-        <TextInput style={styles.textinput} placeholder="Titre du film" onChangeText= {(text) => this._searchTextInputChanged(text)} />
+        <TextInput
+          style={styles.textinput}
+          placeholder="Titre du film"
+          onChangeText={text => this._searchTextInputChanged(text)}
+          onSubmitEditing={() => this._searchFilms()}
+        />
         <Button
           style={{ height: 50 }}
           title="Rechercher"
-          onPress={() => this._loadFilms()}
+          onPress={() => this._searchFilms()}
         />
-        <View style={{ flex: 1, paddingTop: 20 }}>
+        <View style={{ flex: 1, paddingTop: 20, flexDirection: 'row' }}>
           <FlatList
             style={{ marginLeft: 20 }}
             data={this.state.films}
             renderItem={({ item }) => (
-              //<FilmItem film={item}/>
-              
-              <Text>{item.title}
-              <Image 
-                style={styles.image}
-                source={{uri: getImageFromApi(item.poster_path)}}
-              /></Text>
-              
+              <View
+                style={{
+                  flex: 1,
+                  flexDirection: 'row',
+                }}>
+                <Image
+                  style={styles.image}
+                  source={{ uri: getImageFromApi(item.poster_path) }}
+                />
+                <View style={{ flex: 1, flexDirection: 'column' }}>
+                  <Text style={styles.titre}>{item.title}</Text>
+                  <Text
+                    style={{flex: 1, marginLeft: 5}}
+                    numberOfLines={6}>
+                    {item.overview}
+                  </Text>
+                </View>
+              </View>
             )}
+            onEndReachedThreshold={0.5}
+            onEndReached={() => {
+              if (this.state.films.length > 0 && this.page < this.totalPages) {
+                this._loadFilms;
+              }
+            }}
             keyExtractor={(item, index) => item}
           />
         </View>
@@ -82,11 +147,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingLeft: 5,
   },
+  titre: {
+    flex: 1,
+    marginLeft: 5,
+    marginTop: 9,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   image: {
-    width: 120,
-    height: 180,
-    margin: 5,
-    backgroundColor: 'gray'
+    flex: 1,
+    width: 150,
+    height: 150,
+    marginTop: 9,
+  },
+  loading_container: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 100,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 
