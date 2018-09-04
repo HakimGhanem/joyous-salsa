@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Search from './components/Search';
+import Navigation from './Navigation/Navigation';
 
 export default class App extends React.Component {
   constructor(props){
@@ -12,7 +13,7 @@ export default class App extends React.Component {
   render() {
     return (
        
-       <Search/>
+       <Navigation/>
        
        
     );

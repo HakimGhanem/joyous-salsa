@@ -81,64 +81,41 @@ class Search extends React.Component {
     );
   }
 
+  _displayDetailForFilm = (idFilm) => {
+    console.log("Display details for film " + idFilm);
+    this.props.navigation.navigate("FilmDetail", {idFilm: idFilm});
+  }
+
   render() {
     console.log(this.state.films);
     return (
       <View style={styles.main_container}>
         <TextInput
           style={styles.textinput}
-          placeholder="Titre du film"
-          onChangeText={text => this._searchTextInputChanged(text)}
+          placeholder='Titre du film'
+          onChangeText={(text) => this._searchTextInputChanged(text)}
           onSubmitEditing={() => this._searchFilms()}
         />
-        <Button
-          style={{ height: 50 }}
-          title="Rechercher"
-          onPress={() => this._searchFilms()}
-        />
-        <View style={{ flex: 1, paddingTop: 20, flexDirection: 'row' }}>
-          <FlatList
-            style={{ marginLeft: 20 }}
-            data={this.state.films}
-            renderItem={({ item }) => (
-              <View
-                style={{
-                  flex: 1,
-                  flexDirection: 'row',
-                }}>
-                <Image
-                  style={styles.image}
-                  source={{ uri: getImageFromApi(item.poster_path) }}
-                />
-                <View style={{ flex: 1, flexDirection: 'column' }}>
-                  <Text style={styles.titre}>{item.title}</Text>
-                  <Text
-                    style={{flex: 1, marginLeft: 5}}
-                    numberOfLines={6}>
-                    {item.overview}
-                  </Text>
-                </View>
-              </View>
-            )}
-            onEndReachedThreshold={0.5}
-            onEndReached={() => {
-              if (this.state.films.length > 0 && this.page < this.totalPages) {
-                this._loadFilms;
+        <Button style={{ height: 50 }} title='Rechercher' onPress={() => this._searchFilms()}/>
+        <FlatList
+          data={this.state.films}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({item}) => <FilmItem film={item} displayDetailForFilm={this._displayDetailForFilm} />}
+          onEndReachedThreshold={0.5}
+          onEndReached={() => {
+              if (this.state.films.length > 0 && this.page < this.totalPages) { // On vérifie également qu'on n'a pas atteint la fin de la pagination (totalPages) avant de charger plus d'éléments
+                 this._loadFilms()
               }
-            }}
-            keyExtractor={(item, index) => item}
-          />
-        </View>
+          }}
+        />
+        {this._displayLoading()}
       </View>
     );
   }
 }
 
 const styles = StyleSheet.create({
-  main_container: {
-    flex: 1,
-    marginTop: 40,
-  },
+
   textinput: {
     marginLeft: 5,
     marginRight: 5,
